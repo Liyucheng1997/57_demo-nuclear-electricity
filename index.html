@@ -9,96 +9,117 @@
   <body>
     <div id="app">
       <canvas id="scene"></canvas>
+      <div id="fade"></div>
+      <div id="loading" class="loading"><span class="brand-mark"></span><p>正在构建核电站模型…</p></div>
 
       <header class="topbar">
         <div class="brand">
           <span class="brand-mark" aria-hidden="true"></span>
           <div>
             <h1>核能发电厂</h1>
-            <p>压水堆核电站能量转换流程</p>
+            <p>压水堆（PWR）核电站 · 三维原理演示</p>
           </div>
         </div>
-        <nav class="phase-tabs" aria-label="流程阶段">
-          <button class="phase-tab active" data-step="0" title="核裂变">
-            <i data-lucide="atom"></i>
-            <span>核裂变</span>
-          </button>
-          <button class="phase-tab" data-step="1" title="一回路传热">
-            <i data-lucide="thermometer"></i>
-            <span>一回路</span>
-          </button>
-          <button class="phase-tab" data-step="2" title="蒸汽驱动汽轮机">
-            <i data-lucide="waves"></i>
-            <span>蒸汽</span>
-          </button>
-          <button class="phase-tab" data-step="3" title="发电与升压">
-            <i data-lucide="zap"></i>
-            <span>发电</span>
-          </button>
-          <button class="phase-tab" data-step="4" title="冷凝与冷却">
-            <i data-lucide="snowflake"></i>
-            <span>冷却</span>
-          </button>
-        </nav>
+        <nav id="step-tabs" class="step-tabs" aria-label="流程阶段"></nav>
+        <button id="panel-toggle" class="icon-button ghost mobile-only" title="运行控制">
+          <i data-lucide="sliders-horizontal"></i>
+        </button>
       </header>
 
-      <aside class="info-panel" aria-label="核电流程说明">
-        <section class="step-summary">
-          <div class="step-kicker">当前阶段</div>
-          <h2 id="step-title">核裂变释放热量</h2>
-          <p id="step-description">
-            铀燃料组件在反应堆压力容器内发生受控链式裂变，控制棒调节中子通量，产生稳定热功率。
-          </p>
+      <aside id="info-panel" class="panel info-panel" aria-label="阶段说明">
+        <div class="kicker">
+          <span id="step-index">01 / 08</span>
+          <span id="step-energy"></span>
+        </div>
+        <h2 id="step-title"></h2>
+        <p id="step-desc"></p>
+        <ul id="step-points" class="points"></ul>
+        <dl id="step-facts" class="facts"></dl>
+        <div class="step-nav">
+          <button id="prev-step" class="nav-button">上一步</button>
+          <button id="next-step" class="nav-button primary">下一步</button>
+        </div>
+      </aside>
+
+      <aside id="control-panel" class="panel control-panel" aria-label="运行控制">
+        <section class="block">
+          <div class="block-title"><i data-lucide="gauge"></i>反应堆控制</div>
+          <label class="rod-control">
+            <span class="row"><span>控制棒插入深度</span><strong id="rod-value">25%</strong></span>
+            <input id="rod" type="range" min="0" max="100" value="25" />
+            <span class="row hint"><span>← 拔出：功率上升</span><span>插入：功率下降 →</span></span>
+          </label>
+          <div class="status-row">
+            <span id="reactivity" class="badge ok">临界 · 稳定运行</span>
+            <button id="scram" class="danger-button" title="控制棒在重力作用下快速全部插入">紧急停堆</button>
+          </div>
         </section>
 
-        <section class="metric-grid" aria-label="运行参数">
-          <div class="metric">
-            <span>反应堆热功率</span>
-            <strong id="metric-thermal">3210 MWt</strong>
+        <section class="block">
+          <div class="gauge">
+            <span class="row"><span>反应堆功率</span><strong id="m-power">100%</strong></span>
+            <i class="bar"><b id="m-power-bar"></b></i>
           </div>
-          <div class="metric">
-            <span>电功率输出</span>
-            <strong id="metric-electric">1080 MWe</strong>
-          </div>
-          <div class="metric">
-            <span>一回路压力</span>
-            <strong>15.5 MPa</strong>
-          </div>
-          <div class="metric">
-            <span>热效率</span>
-            <strong id="metric-efficiency">33.6%</strong>
+          <div class="metrics">
+            <div><span>热功率</span><strong id="m-thermal">3210 MWt</strong></div>
+            <div><span>电功率</span><strong id="m-electric">1080 MWe</strong></div>
+            <div><span>热段温度</span><strong id="m-thot" class="t-hot">327 °C</strong></div>
+            <div><span>冷段温度</span><strong id="m-tcold" class="t-cold">292 °C</strong></div>
+            <div><span>汽轮机转速</span><strong id="m-rpm">1500 r/min</strong></div>
+            <div><span id="m-extra-label">电网频率</span><strong id="m-extra">50.0 Hz</strong></div>
           </div>
         </section>
 
-        <section class="legend" aria-label="流体图例">
-          <div><span class="dot hot"></span>高温一回路冷却剂</div>
-          <div><span class="dot cool"></span>降温回流冷却剂</div>
-          <div><span class="dot steam"></span>二回路蒸汽</div>
-          <div><span class="dot electric"></span>电能输出</div>
-          <div><span class="dot water"></span>循环冷却水</div>
+        <section class="block">
+          <div class="toggles">
+            <label class="toggle"><input id="t-labels" type="checkbox" checked /><span>标注</span></label>
+            <label class="toggle"><input id="t-shells" type="checkbox" checked /><span>建筑外壳</span></label>
+            <label class="toggle"><input id="t-tour" type="checkbox" /><span>自动导览</span></label>
+          </div>
+          <div class="playback">
+            <button id="toggle-run" class="icon-button primary" title="暂停 / 继续（空格）"><i data-lucide="pause"></i></button>
+            <button id="reset-view" class="icon-button" title="重置视角"><i data-lucide="rotate-ccw"></i></button>
+            <label class="speed-control">
+              <span>动画速度</span>
+              <input id="speed" type="range" min="0.2" max="2.5" step="0.1" value="1" />
+            </label>
+          </div>
+        </section>
+
+        <section class="block legend">
+          <div class="legend-grad"><span>冷却剂温度</span><i></i><em><span>292 °C</span><span>327 °C</span></em></div>
+          <div class="legend-items">
+            <span><i class="dot steam"></i>蒸汽</span>
+            <span><i class="dot feed"></i>给水 / 凝结水</span>
+            <span><i class="dot cool"></i>循环冷却水</span>
+            <span><i class="dot electric"></i>电能</span>
+            <span><i class="dot neutron"></i>中子</span>
+            <span><i class="dot cut"></i>剖切面</span>
+          </div>
         </section>
       </aside>
 
-      <aside class="control-panel" aria-label="可视化控制">
-        <button id="toggle-run" class="icon-button primary" title="暂停或继续动画">
-          <i data-lucide="pause"></i>
-        </button>
-        <button id="reset-view" class="icon-button" title="重置视角">
-          <i data-lucide="rotate-ccw"></i>
-        </button>
-        <label class="speed-control">
-          <span>流速</span>
-          <input id="speed" type="range" min="0.4" max="2.4" step="0.1" value="1" />
-        </label>
-      </aside>
+      <footer id="energy-chain" class="energy-chain" aria-label="能量转换链"></footer>
 
-      <footer class="timeline" aria-label="能量转换链">
-        <div class="timeline-item active" data-step="0">裂变热</div>
-        <div class="timeline-item" data-step="1">高压传热</div>
-        <div class="timeline-item" data-step="2">蒸汽做功</div>
-        <div class="timeline-item" data-step="3">机械转电能</div>
-        <div class="timeline-item" data-step="4">冷凝循环</div>
-      </footer>
+      <div id="micro-overlay" class="micro-overlay" aria-hidden="true">
+        <div class="equation">
+          <span class="n">n</span> + <span class="u">²³⁵U</span> → <span class="u">²³⁶U*</span> → <span class="f">¹⁴¹Ba</span> + <span class="f">⁹²Kr</span> + 3<span class="n">n</span> + <span class="e">≈200 MeV</span>
+        </div>
+        <div class="micro-legend">
+          <span><i class="dot p235"></i>铀-235 核</span>
+          <span><i class="dot p238"></i>铀-238 核</span>
+          <span><i class="dot fast"></i>快中子</span>
+          <span><i class="dot thermal"></i>热中子（慢化后）</span>
+          <span><i class="dot water"></i>水分子</span>
+          <span><i class="dot rod"></i>控制棒</span>
+          <em>示意：实际燃料中铀-235 仅占 3~5%</em>
+        </div>
+        <div class="micro-stats">
+          <div><span>中子数</span><strong id="ms-neutrons">0</strong></div>
+          <div><span>裂变速率</span><strong id="ms-rate">0 /s</strong></div>
+          <div><span>累计裂变</span><strong id="ms-total">0</strong></div>
+        </div>
+      </div>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>
